@@ -63,21 +63,34 @@ methods:
   - name: setLanguage
     summary: Sets the current language of the application.
     description: |
-        This property holds a value such as `en` or `fr`. See the 
-        [ISO 639-1](http://en.wikipedia.org/wiki/ISO_639-1) section of wikipedia for reference.
-        
-        On Android you can also specify combination of a ISO 2-letter language and country codes. For example, 
-        `en-US` or `en-GB`. See the [ISO 639-1](http://en.wikipedia.org/wiki/ISO_639-1) and 
-        [ISO 3166-1 alpha-2](http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements) 
-        sections of wikipedia for reference.
+      This property holds a value such as `en` or `fr`. See the 
+      [ISO 639-1](http://en.wikipedia.org/wiki/ISO_639-1) section of wikipedia for reference.
 
-        When changing to a language with a different layout direction, such as English to Arabic or vice-versa,
-        you will need to close and re-open the window in order to apply the new right-to-left setting.
+      On Android you can also specify combination of a ISO 2-letter language and country codes. For example, 
+      `en-US` or `en-GB`. See the [ISO 639-1](http://en.wikipedia.org/wiki/ISO_639-1) and 
+      [ISO 3166-1 alpha-2](http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements) 
+      sections of wikipedia for reference.
+
+      When changing to a language with a different layout direction, such as English to Arabic or vice-versa,
+      you will need to close and re-open the window in order to apply the new right-to-left setting.
+
+      This will restart the app internally to properly apply the new language setting. If you want to avoid
+      this behavior, you can listen for the `change` event and handle the language change manually.
     platforms: [iphone, ipad, android, macos]
-    parameters: 
+    parameters:
       - name: language
         summary: The specified ISO 639-1 code.
         type: String
+
+  - name: resetToSystemLanguage
+    summary: Reset the app to follow the system language.
+    description: |
+      Use this method to reset the app to follow the system language after having set a custom language.
+
+      This will restart the app internally to properly apply the new language setting. If you want to avoid
+      this behavior, you can listen for the `change` event and handle the language change manually.
+    platforms: [android]
+    since: "13.1.0"
         
   - name: getLocaleCurrencySymbol
     summary: Returns the currency symbol for the specified locale.
@@ -235,3 +248,45 @@ properties:
         sections of wikipedia for reference.
     type: String
     permission: read-only
+
+  - name: systemCountry
+    summary: Country of the current system locale, as an ISO 2-letter code.
+    description: |
+      This property can be different from `currentCountry` if the app language has been
+      overridden by calling `setLanguage()` on Android versions supporting per-app locale features.
+
+      This property holds a value such as `US` or `GB`. See the 
+      [ISO 3166-1 alpha-2](http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements) 
+      country codes section of wikipedia for reference.
+    platforms: [android]
+    type: String
+    permission: read-only
+    since: "13.1.0"
+
+  - name: systemLanguage
+    summary: Language of the current system locale, as an ISO 2-letter code.
+    description: |
+      This property can be different from `currentLanguage` if the app language has been
+      overridden by calling `setLanguage()` on Android versions supporting per-app locale features.
+
+      This property holds a value such as `en` or `fr`. See the 
+      [ISO 639-1](http://en.wikipedia.org/wiki/ISO_639-1) section of wikipedia for reference.
+    type: String
+    platforms: [android]
+    permission: read-only
+    since: "13.1.0"
+
+  - name: systemLocale
+    summary: Current system locale, as a combination of ISO 2-letter language and country codes.
+    description: |
+      This property can be different from `currentLocale` if the app language has been
+      overridden by calling `setLanguage()` on Android versions supporting per-app locale features.
+
+      This property holds a value such as `en-US` or `en-GB`.
+      See the [ISO 639-1](http://en.wikipedia.org/wiki/ISO_639-1) and 
+      [ISO 3166-1 alpha-2](http://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#Officially_assigned_code_elements) 
+      sections of wikipedia for reference.
+    type: String
+    platforms: [android]
+    permission: read-only
+    since: "13.1.0"
