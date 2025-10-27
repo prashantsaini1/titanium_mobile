@@ -23,9 +23,6 @@ import android.view.accessibility.AccessibilityManager;
 
 import androidx.annotation.NonNull;
 
-import com.appcelerator.aps.APSAnalytics;
-import com.appcelerator.aps.APSAnalyticsMeta;
-
 import org.appcelerator.kroll.KrollApplication;
 import org.appcelerator.kroll.KrollModule;
 import org.appcelerator.kroll.KrollProxy;
@@ -37,6 +34,8 @@ import org.appcelerator.kroll.common.TiConfig;
 import org.appcelerator.kroll.common.TiDeployData;
 import org.appcelerator.kroll.common.TiMessenger;
 import org.appcelerator.kroll.util.KrollAssetHelper;
+import org.appcelerator.titanium.util.TiSession;
+import org.appcelerator.titanium.util.TiSessionMeta;
 import org.appcelerator.titanium.util.TiBlobLruCache;
 import org.appcelerator.titanium.util.TiFileHelper;
 import org.appcelerator.titanium.util.TiImageCache;
@@ -473,16 +472,12 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		}
 
 		String buildType = this.appInfo.getBuildType();
-		if (buildType != null && !buildType.equals("")) {
-			APSAnalyticsMeta.setBuildType(buildType);
-		}
-
-		APSAnalyticsMeta.setAppId(this.appInfo.getId());
-		APSAnalyticsMeta.setAppName(this.appInfo.getName());
-		APSAnalyticsMeta.setAppVersion(this.appInfo.getVersion());
-		APSAnalyticsMeta.setDeployType(deployType);
-		APSAnalyticsMeta.setSdkVersion(getTiBuildVersion());
-		APSAnalytics.getInstance().setMachineId(this);
+		TiSessionMeta.setAppId(this.appInfo.getId());
+		TiSessionMeta.setAppName(this.appInfo.getName());
+		TiSessionMeta.setAppVersion(this.appInfo.getVersion());
+		TiSessionMeta.setDeployType(deployType);
+		TiSessionMeta.setSdkVersion(getTiBuildVersion());
+		TiSession.getInstance().setMachineId(this);
 	}
 
 	public void postOnCreate()
@@ -498,7 +493,6 @@ public abstract class TiApplication extends Application implements KrollApplicat
 		TiConfig.DEBUG = TiConfig.LOGD = appProperties.getBool("ti.android.debug", false);
 		USE_LEGACY_WINDOW = appProperties.getBool(PROPERTY_USE_LEGACY_WINDOW, false);
 
-		// Start listening for system locale changes.
 		startLocaleMonitor();
 
 		// Register our custom HTTP response cache handler.
@@ -1012,7 +1006,14 @@ public abstract class TiApplication extends Application implements KrollApplicat
 			@Override
 			public void onReceive(Context context, Intent intent)
 			{
-				TiLocaleManager.handleSystemLocaleUpdates();
+				TiMessenger.postOnMain(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						TiLocaleManager.handleSystemLocaleUpdates();
+					}
+				});
 			}
 		};
 

@@ -24,9 +24,9 @@ import java.util.Locale;
 public class TiLocaleManager
 {
 	private static boolean didUserChangeLanguage = false;
-	private static final boolean isPerAppLanguageSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU;
-	public static Locale systemLocale = getSystemLocale(); // Always keeps the system locale updated.
 	private static final String KEY_LOCALE = "currentLocale";
+	private static final boolean isPerAppLanguageSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU;
+	private static Locale systemLocale = getSystemLocale(); // Always keeps the system locale updated.
 
 	/**
 	 * Returns the application's configured locale if set.
@@ -87,7 +87,7 @@ public class TiLocaleManager
 			return;
 		}
 
-		// This will trigger & receive updates via the `onSystemLocaleChanged` route.
+		// This will trigger & receive updates via the `TiApplication's onConfigurationChanged`.
 		didUserChangeLanguage = true;
 		LocaleListCompat appLocales = LocaleListCompat.forLanguageTags(locale.toLanguageTag());
 		AppCompatDelegate.setApplicationLocales(appLocales);
@@ -162,27 +162,6 @@ public class TiLocaleManager
 			setLocaleForApi33(locale);
 		} else {
 			setLocaleForPreApi33(locale, true);
-		}
-	}
-
-	/**
-	 * To enable apps to follow system locale only.
-	 */
-	public static void resetLocaleToSystem()
-	{
-		// To disallow apps to pick custom locale.
-		TiApplication.getInstance().getAppProperties().setString(KEY_LOCALE, null);
-
-		if (isPerAppLanguageSupported) {
-			// Skip if the system language and the app language are same.
-			Locale previousLocale = AppCompatDelegate.getApplicationLocales().get(0);
-			if (previousLocale == null || previousLocale.equals(systemLocale)) {
-				return;
-			}
-			didUserChangeLanguage = true;
-			AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList());
-		} else {
-			setLocaleForPreApi33(systemLocale, true);
 		}
 	}
 }
