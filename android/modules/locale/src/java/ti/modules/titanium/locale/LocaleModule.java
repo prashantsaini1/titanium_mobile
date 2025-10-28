@@ -51,24 +51,6 @@ public class LocaleModule extends KrollModule
 		return TiPlatformHelper.getInstance().getLocale();
 	}
 
-	@Kroll.getProperty
-	public String getSystemLanguage()
-	{
-		return TiLocaleManager.systemLocale.getLanguage();
-	}
-
-	@Kroll.getProperty
-	public String getSystemCountry()
-	{
-		return TiLocaleManager.systemLocale.getCountry();
-	}
-
-	@Kroll.getProperty
-	public String getSystemLocale()
-	{
-		return TiLocaleManager.systemLocale.toString().replace("_", "-");
-	}
-
 	@Kroll.method
 	public String getCurrencyCode(String localeString)
 	{
@@ -247,12 +229,6 @@ public class LocaleModule extends KrollModule
 		} catch (Exception e) {
 			Log.e(TAG, "Error trying to set language '" + language + "':", e);
 		}
-	}
-
-	@Kroll.method
-	public void resetToSystemLanguage()
-	{
-		TiLocaleManager.resetLocaleToSystem();
 	}
 
 	@Kroll.method
