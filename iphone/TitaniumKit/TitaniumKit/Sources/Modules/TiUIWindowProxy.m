@@ -119,7 +119,11 @@
 
 - (void)_destroy
 {
-  if (!closing && opened) {
+  // Only the first call, from the context shutdown, may still close the window. The root window
+  // of a tab refuses to close there, so it is still "opened" when it is finally freed with the
+  // JS VM, long after its tab and controller are gone. The second call from dealloc must not
+  // touch them anymore.
+  if (!closing && opened && ![self destroyed]) {
     TiThreadPerformOnMainThread(
         ^{
           [self close:nil];
@@ -566,7 +570,9 @@
 
 - (BOOL)shouldUseNavBarApperance
 {
-  return controller != nil && !(controller.edgesForExtendedLayout == UIRectEdgeTop || controller.edgesForExtendedLayout == UIRectEdgeAll);
+  // Use the configured edges, the controller extends the bottom edge for the vertical tab bar
+  UIRectEdge edges = [TiUtils extendedEdgesFromProp:[self valueForUndefinedKey:@"extendEdges"]];
+  return controller != nil && !(edges == UIRectEdgeTop || edges == UIRectEdgeAll);
 }
 
 - (void)updateBarImage
@@ -701,7 +707,13 @@
   NSMutableArray *theItems = [[NSMutableArray alloc] init];
   for (TiViewProxy *theProxy in theObjects) {
     if ([theProxy supportsNavBarPositioning]) {
-      [theItems addObject:[theProxy barButtonItem]];
+      UIBarButtonItem *item = [theProxy barButtonItem];
+#if IS_SDK_IOS_26
+      if (@available(iOS 26.0, *)) {
+        item.hidesSharedBackground = [TiUtils boolValue:[theProxy valueForUndefinedKey:@"hideSharedBackground"] def:NO];
+      }
+#endif
+      [theItems addObject:item];
     } else {
       DebugLog(@"%@ does not support nav bar positioning", theProxy);
     }
@@ -769,7 +781,13 @@
   NSMutableArray *theItems = [[NSMutableArray alloc] init];
   for (TiViewProxy *theProxy in theObjects) {
     if ([theProxy supportsNavBarPositioning]) {
-      [theItems addObject:[theProxy barButtonItem]];
+      UIBarButtonItem *item = [theProxy barButtonItem];
+#if IS_SDK_IOS_26
+      if (@available(iOS 26.0, *)) {
+        item.hidesSharedBackground = [TiUtils boolValue:[theProxy valueForUndefinedKey:@"hideSharedBackground"] def:NO];
+      }
+#endif
+      [theItems addObject:item];
     } else {
       DebugLog(@"%@ does not support nav bar positioning", theProxy);
     }
@@ -1289,32 +1307,16 @@
   return safeAreaInsetsChanged;
 }
 
+// The horizontal insets used to be skipped in portrait, where phones report none. The vertical tab bar of the
+// iPhone Duo is reported as a horizontal inset in portrait too, so the insets are applied as UIKit reports them.
 - (UIEdgeInsets)tabGroupEdgeInsetsForSafeAreaInset:(UIEdgeInsets)safeAreaInset
 {
-  UIEdgeInsets edgeInsets = UIEdgeInsetsZero;
-  UIInterfaceOrientation orientation = [TiUtils interfaceOrientationForScene:[self owningInstance].window.windowScene];
-  if (!UIInterfaceOrientationIsPortrait(orientation)) {
-    edgeInsets.left = safeAreaInset.left;
-    edgeInsets.right = safeAreaInset.right;
-  }
-
-  edgeInsets.top = safeAreaInset.top;
-  edgeInsets.bottom = safeAreaInset.bottom;
-
-  return edgeInsets;
+  return [self defaultEdgeInsetsForSafeAreaInset:safeAreaInset];
 }
 
 - (UIEdgeInsets)navigationGroupEdgeInsetsForSafeAreaInset:(UIEdgeInsets)safeAreaInset
 {
-  UIEdgeInsets edgeInsets = UIEdgeInsetsZero;
-  UIInterfaceOrientation orientation = [TiUtils interfaceOrientationForScene:[self owningInstance].window.windowScene];
-  if (!UIInterfaceOrientationIsPortrait(orientation)) {
-    edgeInsets.left = safeAreaInset.left;
-    edgeInsets.right = safeAreaInset.right;
-  }
-  edgeInsets.top = safeAreaInset.top;
-  edgeInsets.bottom = safeAreaInset.bottom;
-  return edgeInsets;
+  return [self defaultEdgeInsetsForSafeAreaInset:safeAreaInset];
 }
 
 - (UIEdgeInsets)defaultEdgeInsetsForSafeAreaInset:(UIEdgeInsets)safeAreaInset
